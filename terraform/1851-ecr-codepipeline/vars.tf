@@ -14,7 +14,7 @@ variable "region" {
   default = "us-east-1"
 }
 variable "repo_id" {
-  default = "GARAGANAGARAJU/perals-1851-project"
+  default = "NagarajuG123/pt1851-nagaraju"
 }
 variable "codebuild_bucket" {
   default = "codebuild-nagaraju"
