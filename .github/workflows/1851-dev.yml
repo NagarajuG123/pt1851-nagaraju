@@ -15,11 +15,6 @@ env:
   TF_IN_AUTOMATION: true
   TF_WORKSPACE: 1851-dev
   TF_BACKEND_PATH: "backend/dev.tfvars"
-<<<<<<< HEAD
-  TF_VAR_tf_backend_bucket_name: tf-state-keeper-nagaraju
-=======
-  TF_VAR_tf_backend_bucket_name: tf-state-keeper-dev-alll
->>>>>>> 7c519aba6339a50a5018291bc3ae30920b7db265
 
 jobs:
   terraform:
