@@ -1,0 +1,110 @@
+name: 'Terraform-Production'
+
+on:
+  push:
+    branches:
+      - production
+    paths:
+      - "terraform/1851-ecr-codepipeline/**/*"
+      - ".github/workflows/1851-prod.yml"
+  pull_request:
+      branches:
+      - production
+      
+  
+
+env:
+  TF_IN_AUTOMATION: true
+  TF_WORKSPACE: 1851-prod
+  TF_BACKEND_PATH: "backend/prod.tfvars"
+  TF_VAR_tf_backend_bucket_name: tf-state-keeper-prod
+
+jobs:
+  terraform:
+    name: 'Terraform-Development'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform/1851-ecr-codepipeline
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - uses: actions/checkout@v2
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Copy the tfvars
+      run: |
+        cp env/prod.tfvars prod.auto.tfvars
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.2.4
+        #cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+
+    - name: Terraform Format
+      id: fmt
+      run: terraform fmt -check
+      continue-on-error: true
+
+    - name: Terraform Init
+      id: init
+      run: terraform init -backend-config=$TF_BACKEND_PATH
+
+    - name: Terraform Validate
+      id: validate
+      run: terraform validate -no-color 
+
+    - name: Terraform Plan
+      id: plan
+      if: github.event_name == 'pull_request'
+      run: terraform plan -no-color -input=false 
+      continue-on-error: true
+
+    - name: Update Pull Request
+      uses: actions/github-script@v6
+      if: github.event_name == 'pull_request'
+      env:
+        PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+          #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+          #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+          #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+
+          <details><summary>Show Plan</summary>
+
+          \`\`\`\n
+          ${process.env.PLAN}
+          \`\`\`
+
+          </details>
+
+          *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+
+    - name: Terraform Plan Status
+      if: steps.plan.outcome == 'failure'
+      run: exit 1
+
+    - name: Terraform Apply
+      if: github.ref == 'refs/heads/production' && github.event_name == 'push'
+      run: terraform apply -auto-approve -input=false 
+
+    
