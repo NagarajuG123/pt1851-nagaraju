@@ -54,7 +54,7 @@ jobs:
 
     - name: Terraform Init
       id: init
-      run: terraform init -backend-config=$TF_BACKEND_PATH
+      run: terraform init -backend-config=./backend/dev.tfvars
 
     - name: Terraform Validate
       id: validate
