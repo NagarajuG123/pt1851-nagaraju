@@ -60,6 +60,7 @@ module "EcrCodepipeline-app" {
 
 module "EcrCodepipeline-nginx" {
   source                  = "github.com/PearlThoughts2/terraform-ecs-codepipeline?ref=main"
+  publication             = var.publication
   environment             = var.environment
   image_name              = "nginx"
   build_spec_path         = "buildspec/buildspec-nginx.yml"
