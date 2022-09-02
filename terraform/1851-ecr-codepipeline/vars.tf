@@ -22,3 +22,6 @@ variable "codebuild_bucket" {
 variable "codepipeline_bucket" {
   default = "codepipeline-nagaraju"
 }
+variable "publication" {
+  default= "api2"
+}
