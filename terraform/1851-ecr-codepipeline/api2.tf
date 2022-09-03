@@ -1,6 +1,5 @@
 module "EcrCodepipeline-app" {
   source                  = "github.com/pt1851/terraform-ecs-codepipeline?ref=main"
-  publication             = var.publication
   environment             = var.environment
   image_name              = "app"
   build_spec_path         = "buildspec/buildspec-app.yml"
